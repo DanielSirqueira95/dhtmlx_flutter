@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="flutter_dhtmlx">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+  <link rel="stylesheet" type="text/css" href="assets/dhtmlxgantt.css">
+  <script src="assets/dhtmlxgantt.js"></script>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>flutter_dhtmlx</title>
+  <link rel="manifest" href="manifest.json">
+
+  <script>
+    // The value below is injected by flutter build, do not touch.
+    const serviceWorkerVersion = null;
+  </script>
+  <!-- This script adds the flutter initialization JS code -->
+  <script src="flutter.js" defer></script>
+  <!-- <script src="assets/flutter_dhtmlx.js"></script> -->
+  <script type="application/javascript" src="/assets/packages/flutter_inappwebview_web/assets/web/web_support.js" defer></script>
+  <script>
+    function initGantt(tasks) {
+      if (document.getElementById('gantt-container')) {
+        gantt.config.date_format = "%Y-%m-%d %H:%i:%s";
+        gantt.init('gantt-container');
+
+        // Preparar os dados das tarefas
+        const preparedTasks = tasks.map(task => ({
+            ...task,
+            start_date: new Date(task.start_date), // Converte string de data para objeto Date
+            end_date: new Date(task.end_date) // Converte string de data para objeto Date
+        }));
+
+        gantt.parse({data: preparedTasks}); // Inicializa com a lista de tarefas
+        setupGanttEvents();
+    } else {
+        setTimeout(() => initGantt(tasks), 50);
+    }
+    }
+
+    function setupGanttEvents() {
+        gantt.attachEvent('onAfterTaskAdd', function(id, item) {
+            console.log('Task added', id, item);
+            window.dispatchEvent(new CustomEvent('onTaskAdded', {detail: JSON.stringify({id: id, item: item})}));
+        });
+        gantt.attachEvent('onAfterTaskUpdate', function(id, item) {
+            console.log('Task updated', id, item);
+            window.dispatchEvent(new CustomEvent('onTaskUpdated', {detail: JSON.stringify({id: id, item: item})}));
+        });
+        gantt.attachEvent('onAfterTaskDelete', function(id) {
+            console.log('Task deleted', id);
+            window.dispatchEvent(new CustomEvent('onTaskDeleted', {detail: JSON.stringify({id: id})}));
+        });
+    }
+
+    function addTask(task) {
+        task.start_date = new Date(task.start_date); 
+        gantt.addTask(task);
+    }
+
+    function updateTask(taskId, changes) {
+        if (changes.start_date) {
+            changes.start_date = new Date(changes.start_date); 
+        }
+        var task = gantt.getTask(taskId);
+        Object.assign(task, changes);
+        gantt.updateTask(taskId);
+    }
+
+    function deleteTask(taskId) {
+        gantt.deleteTask(taskId);
+    }
+  </script>
+</head>
+<body>
+  <script>
+    window.addEventListener('load', function(ev) {
+      console.log('Aqui');
+      // Download main.dart.js
+      _flutter.loader.loadEntrypoint({
+        serviceWorker: {
+          serviceWorkerVersion: serviceWorkerVersion,
+        },
+        onEntrypointLoaded: function(engineInitializer) {
+          engineInitializer.initializeEngine().then(function(appRunner) {
+            appRunner.runApp();
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
